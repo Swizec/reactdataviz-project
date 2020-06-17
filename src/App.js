@@ -5,25 +5,57 @@ import _ from "lodash";
 import "./App.css";
 import Preloader from "./components/Preloader";
 import { loadAllData } from "./DataHandling";
+import CountyMap from "./components/CountyMap";
 
 function App() {
-    const [techSalaries, setTechSalaries] = useState([]);
-    const [medianIncomes, setMedianIncomes] = useState([]);
-    const [countyNames, setCountyNames] = useState([]);
+    const [datasets, setDatasets] = useState({
+        techSalaries: [],
+        medianIncomes: [],
+        countyNames: [],
+        usTopoJson: null,
+        USstateNames: null,
+    });
+
+    const {
+        techSalaries,
+        medianIncomes,
+        countyNames,
+        usTopoJson,
+        USstateNames,
+    } = datasets;
 
     async function loadData() {
-        const data = await loadAllData();
+        const datasets = await loadAllData();
+        setDatasets(datasets);
+    }
 
-        const { techSalaries, medianIncomes, countyNames } = data;
+    function countyValue(county, techSalariesMap) {
+        const medianHousehold = medianIncomes[county.id],
+            salaries = techSalariesMap[county.name];
 
-        setTechSalaries(techSalaries);
-        setMedianIncomes(medianIncomes);
-        setCountyNames(countyNames);
+        if (!medianHousehold || !salaries) {
+            return null;
+        }
+
+        const median = d3.median(salaries, (d) => d.base_salary);
+
+        return {
+            countyID: county.id,
+            value: median - medianHousehold.medianIncome,
+        };
     }
 
     useEffect(() => {
         loadData();
     }, []);
+
+    const filteredSalaries = techSalaries,
+        filteredSalariesMap = _.groupBy(filteredSalaries, "countyID"),
+        countyValues = countyNames
+            .map((county) => countyValue(county, filteredSalariesMap))
+            .filter((d) => !_.isNull(d));
+
+    let zoom = null;
 
     if (techSalaries.length < 1) {
         return <Preloader />;
@@ -31,6 +63,18 @@ function App() {
         return (
             <div className="App container">
                 <h1>Loaded {techSalaries.length} salaries</h1>
+                <svg width="1100" height="500">
+                    <CountyMap
+                        usTopoJson={usTopoJson}
+                        USstateNames={USstateNames}
+                        values={countyValues}
+                        x={0}
+                        y={0}
+                        width={500}
+                        height={500}
+                        zoom={zoom}
+                    />
+                </svg>
             </div>
         );
     }
