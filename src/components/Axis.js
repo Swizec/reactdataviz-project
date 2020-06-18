@@ -1,6 +1,5 @@
 import React from "react";
 import { useD3 } from "d3blackbox";
-// import D3blackbox from "./D3blackbox";
 
 import * as d3 from "d3";
 
