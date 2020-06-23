@@ -8,6 +8,9 @@ import Preloader from "./components/Preloader";
 import { loadAllData } from "./DataHandling";
 import CountyMap from "./components/CountyMap";
 import Histogram from "./components/Histogram";
+import { Title, Description } from "./components/Meta";
+
+import MedianLine from "./components/MedianLine";
 
 function App() {
     const [datasets, setDatasets] = useState({
@@ -16,6 +19,13 @@ function App() {
         countyNames: [],
         usTopoJson: null,
         USstateNames: null,
+        medianIncomesByUSState: {},
+        medianIncomesByCounty: {},
+    });
+    const [filteredBy, setFilteredBy] = useState({
+        USstate: "*",
+        year: "*",
+        jobTitle: "*",
     });
 
     const {
@@ -24,6 +34,8 @@ function App() {
         countyNames,
         usTopoJson,
         USstateNames,
+        medianIncomesByCounty,
+        medianIncomesByUSState,
     } = datasets;
 
     async function loadData() {
@@ -57,14 +69,24 @@ function App() {
             .map((county) => countyValue(county, filteredSalariesMap))
             .filter((d) => !_.isNull(d));
 
-    let zoom = null;
-
     if (techSalaries.length < 1) {
         return <Preloader />;
     } else {
+        let zoom = null,
+            medianHousehold = medianIncomesByUSState["US"][0].medianIncome;
+
         return (
             <div className="App container">
-                <h1>Loaded {techSalaries.length} salaries</h1>
+                <Title
+                    filteredSalaries={filteredSalaries}
+                    filteredBy={filteredBy}
+                />
+                <Description
+                    data={filteredSalaries}
+                    allData={techSalaries}
+                    filteredBy={filteredBy}
+                    medianIncomesByCounty={medianIncomesByCounty}
+                />
                 <svg width="1100" height="500">
                     <CountyMap
                         usTopoJson={usTopoJson}
@@ -85,6 +107,16 @@ function App() {
                         data={filteredSalaries}
                         axisMargin={83}
                         bottomMargin={5}
+                        value={(d) => d.base_salary}
+                    />
+                    <MedianLine
+                        data={filteredSalaries}
+                        x={500}
+                        y={10}
+                        width={600}
+                        height={500}
+                        bottomMargin={5}
+                        median={medianHousehold}
                         value={(d) => d.base_salary}
                     />
                 </svg>
