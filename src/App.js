@@ -9,6 +9,7 @@ import { loadAllData } from "./DataHandling";
 import CountyMap from "./components/CountyMap";
 import Histogram from "./components/Histogram";
 import { Title, Description } from "./components/Meta";
+import Controls from "./components/Controls";
 
 import MedianLine from "./components/MedianLine";
 
@@ -22,6 +23,7 @@ function App() {
         medianIncomesByUSState: {},
         medianIncomesByCounty: {},
     });
+    const [salariesFilter, setSalariesFilter] = useState(() => () => true);
     const [filteredBy, setFilteredBy] = useState({
         USstate: "*",
         year: "*",
@@ -59,11 +61,16 @@ function App() {
         };
     }
 
+    function updateDataFilter(filter, filteredBy) {
+        setFilteredBy(filteredBy);
+        setSalariesFilter(() => filter);
+    }
+
     useEffect(() => {
         loadData();
     }, []);
 
-    const filteredSalaries = techSalaries,
+    const filteredSalaries = techSalaries.filter(salariesFilter),
         filteredSalariesMap = _.groupBy(filteredSalaries, "countyID"),
         countyValues = countyNames
             .map((county) => countyValue(county, filteredSalariesMap))
@@ -74,6 +81,14 @@ function App() {
     } else {
         let zoom = null,
             medianHousehold = medianIncomesByUSState["US"][0].medianIncome;
+
+        if (filteredBy.USstate !== "*") {
+            zoom = filteredBy.USstate;
+            medianHousehold = d3.mean(
+                medianIncomesByUSState[zoom],
+                (d) => d.medianIncome
+            );
+        }
 
         return (
             <div className="App container">
@@ -98,6 +113,13 @@ function App() {
                         height={500}
                         zoom={zoom}
                     />
+                    <rect
+                        x="500"
+                        y="0"
+                        width="600"
+                        height="500"
+                        style={{ fill: "white" }}
+                    />
                     <Histogram
                         bins={10}
                         width={500}
@@ -120,6 +142,10 @@ function App() {
                         value={(d) => d.base_salary}
                     />
                 </svg>
+                <Controls
+                    data={techSalaries}
+                    updateDataFilter={updateDataFilter}
+                />
             </div>
         );
     }
