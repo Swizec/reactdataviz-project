@@ -76,7 +76,7 @@ function App() {
             .map((county) => countyValue(county, filteredSalariesMap))
             .filter((d) => !_.isNull(d));
 
-    if (techSalaries.length < 1) {
+    if (filteredSalaries.length < 1) {
         return <Preloader />;
     } else {
         let zoom = null,

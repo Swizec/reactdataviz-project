@@ -102,7 +102,7 @@ const Controls = ({ data, updateDataFilter }) => {
     };
 
     const updateUSstateFilter = (USstate, reset) => {
-        let USstateFilter = (d) => d.clean_job_title === USstate;
+        let USstateFilter = (d) => d.USstate === USstate;
 
         if (reset || !USstate) {
             USstateFilter = () => true;
