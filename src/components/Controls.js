@@ -41,10 +41,12 @@ const ControlRow = ({
 };
 
 const Controls = ({ data, updateDataFilter }) => {
+    let locationHash = window.location.hash.replace("#", "").split("-");
+
     const [filteredBy, setFilteredBy] = useState({
-        year: "*",
-        USstate: "*",
-        jobTitle: "*",
+        year: locationHash[0] || "*",
+        USstate: locationHash[1] || "*",
+        jobTitle: locationHash[2] || "*",
     });
     const [filterFunctions, setFilter] = useState({
         year: () => true,
@@ -118,6 +120,22 @@ const Controls = ({ data, updateDataFilter }) => {
     useEffect(() => {
         reportUpdateUpTheChain();
     }, [filteredBy, filterFunctions]);
+
+    useEffect(() => {
+        let [year, USstate, jobTitle] = window.location.hash
+            .replace("#", "")
+            .split("-");
+
+        if (year !== "*" && year) {
+            updateYearFilter(Number(year));
+        }
+        if (USstate !== "*" && USstate) {
+            updateUSstateFilter(USstate);
+        }
+        if (jobTitle !== "*" && jobTitle) {
+            updateJobTitleFilter(jobTitle);
+        }
+    }, []);
 
     const years = new Set(data.map((d) => d.submit_date.getFullYear())),
         jobTitles = new Set(data.map((d) => d.clean_job_title)),
